@@ -4,5 +4,6 @@
 <configuration>
     <typeAliases>
         <typeAlias type="com.ktds.boardpractice.dto.BoardDTO" alias="board"></typeAlias>
+        <typeAlias type="com.ktds.boardpractice.dto.CommentDTO" alias="comment"></typeAlias>
     </typeAliases>
 </configuration>

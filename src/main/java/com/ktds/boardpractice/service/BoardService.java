@@ -1,45 +1,70 @@
 package com.ktds.boardpractice.service;
 
 import com.ktds.boardpractice.dto.BoardDTO;
+import com.ktds.boardpractice.dto.PageDTO;
 import com.ktds.boardpractice.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class BoardService {
     private final BoardRepository boardRepository;
+    private final int BOARDS_PER_PAGE = 3;
+    private final int PAGES_PER_SCREEN = 3;
     public int save(BoardDTO boardDTO) {
-        boardDTO.setUuid(UUID.randomUUID().toString());
         return boardRepository.save(boardDTO);
     }
 
     public List<BoardDTO> findAll() {
-        List<BoardDTO> boardDTOList = boardRepository.findAll();
-        Long idx=1L;
-        for(BoardDTO boardDTO : boardDTOList){//보여질때 1,2,3,4순서
-            boardDTO.setIndex(idx);
-            idx++;
-        }
-        return boardDTOList;
+        return boardRepository.findAll();
     }
 
-    public void updateHits(String uuid) {
-        boardRepository.updateHits(uuid);
+    public void updateHits(Long id) {
+        boardRepository.updateHits(id);
     }
 
-    public BoardDTO findById(String uuid) {
-        return boardRepository.findById(uuid);
+    public BoardDTO findById(Long id) {
+        return boardRepository.findById(id);
+    }
+
+    public void delete(Long id) {
+        boardRepository.delete(id);
     }
 
     public void update(BoardDTO boardDTO) {
         boardRepository.update(boardDTO);
     }
 
-    public void delete(String uuid) {
-        boardRepository.delete(uuid);
+    public List<BoardDTO> pagingList(int page) {
+        int pagingStart = (page - 1) * BOARDS_PER_PAGE;
+        Map<String, Integer> pagingParams = new HashMap<>();
+        pagingParams.put("start", pagingStart);
+        pagingParams.put("limit", BOARDS_PER_PAGE);
+        return boardRepository.pagingList(pagingParams);
+    }
+
+    public PageDTO pagingParam(int page) {
+        // 전체 글 갯수 조회
+        int boardCount = boardRepository.boardCount();
+        // 전체 페이지 갯수 계산(10/3=3.33333 => 4)
+        int maxPage = (int) (Math.ceil((double) boardCount / BOARDS_PER_PAGE));
+        // 시작 페이지 값 계산(1, 4, 7, 10, ~~~~)
+        int startPage = (((int)(Math.ceil((double) page / PAGES_PER_SCREEN))) - 1) * PAGES_PER_SCREEN + 1;
+        // 끝 페이지 값 계산(3, 6, 9, 12, ~~~~)
+        int endPage = startPage + PAGES_PER_SCREEN - 1;
+        if (endPage > maxPage) {
+            endPage = maxPage;
+        }
+        PageDTO pageDTO = new PageDTO();
+        pageDTO.setPage(page);
+        pageDTO.setMaxPage(maxPage);
+        pageDTO.setStartPage(startPage);
+        pageDTO.setEndPage(endPage);
+        return pageDTO;
     }
 }

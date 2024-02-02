@@ -11,8 +11,7 @@ import java.util.UUID;
 @Setter
 @ToString
 public class BoardDTO {
-    private String uuid;
-    private Long index;
+    private Long id;
     private String boardWriter;
     private String boardPass;
     private String boardTitle;

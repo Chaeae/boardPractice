@@ -6,33 +6,41 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
 public class BoardRepository {
     private final SqlSessionTemplate sql;
     public int save(BoardDTO boardDTO) {
-
-        return sql.insert("Board.save",boardDTO);
+        return sql.insert("Board.save", boardDTO);
     }
 
     public List<BoardDTO> findAll() {
         return sql.selectList("Board.findAll");
     }
 
-    public void updateHits(String uuid) {
-        sql.insert("Board.updateHits",uuid);
+    public void updateHits(Long id) {
+        sql.update("Board.updateHits", id);
     }
 
-    public BoardDTO findById(String uuid) {
-        return sql.selectOne("Board.findById",uuid);
+    public BoardDTO findById(Long id) {
+        return sql.selectOne("Board.findById", id);
+    }
+
+    public void delete(Long id) {
+        sql.delete("Board.delete", id);
     }
 
     public void update(BoardDTO boardDTO) {
         sql.update("Board.update", boardDTO);
     }
 
-    public void delete(String uuid) {
-        sql.delete("Board.delete",uuid);
+    public List<BoardDTO> pagingList(Map<String, Integer> pagingParams) {
+        return sql.selectList("Board.pagingList", pagingParams);
+    }
+
+    public int boardCount() {
+        return sql.selectOne("Board.boardCount");
     }
 }

@@ -1,7 +1,10 @@
 package com.ktds.boardpractice.controller;
 
 import com.ktds.boardpractice.dto.BoardDTO;
+import com.ktds.boardpractice.dto.CommentDTO;
+import com.ktds.boardpractice.dto.PageDTO;
 import com.ktds.boardpractice.service.BoardService;
+import com.ktds.boardpractice.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,68 +13,76 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
-@RequiredArgsConstructor //생성자 생성을 임의로 해줌
-@RequestMapping("/board")//url관리
-
+@RequiredArgsConstructor
+@RequestMapping("/board")
 public class BoardController {
     private final BoardService boardService;
+    private final CommentService commentService;
 
-    //create
     @GetMapping("/save")
-    public String saveForm(){
+    public String saveForm() {
         return "save";
     }
 
     @PostMapping("/save")
-    public String save(@ModelAttribute BoardDTO boardDTO){
+    public String save(@ModelAttribute BoardDTO boardDTO) {
         int saveResult = boardService.save(boardDTO);
-        if (saveResult > 0 ){
-            return "redirect:/board/";
-        }
-        else{
+        if (saveResult > 0) {
+            return "redirect:/board/paging";
+        } else {
             return "save";
         }
     }
-    //read
-    //전페 목록 조회
+
     @GetMapping("/")
-    public String findAll(Model model){
+    public String findAll(Model model) {
         List<BoardDTO> boardDTOList = boardService.findAll();
-        model.addAttribute("boardList",boardDTOList);//list로 boardDTOList전송
-        return "list";//jsp화면이 보임
+        model.addAttribute("boardList", boardDTOList);
+        return "list";
     }
 
-    //하나 상세조회
     @GetMapping
-    public String findById(@RequestParam("uuid") String uuid, @RequestParam("index") Long index, Model model){
-        boardService.updateHits(uuid);
-        //System.out.println(boardDTO.toString());
-        BoardDTO boardDTO = boardService.findById(uuid);
-        boardDTO.setIndex(index);
-        model.addAttribute("board",boardDTO);
+    public String findById(@RequestParam("id") Long id,
+                           @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                           Model model) {
+        boardService.updateHits(id);
+        BoardDTO boardDTO = boardService.findById(id);
+        model.addAttribute("board", boardDTO);
+        model.addAttribute("page", page);
+        List<CommentDTO> commentDTOList = commentService.findAll(id);
+        model.addAttribute("commentList", commentDTOList);
         return "detail";
     }
 
-    //update
-    @GetMapping("/update")
-    public String updateForm(@RequestParam("uuid") String uuid, Model model){
-        BoardDTO boardDTO = boardService.findById(uuid);
-        model.addAttribute("board",boardDTO);
-        return "detail";
-    }
-
-    @PostMapping("/update")             //수정할 내용을 가져옴
-    public String update(@ModelAttribute BoardDTO boardDTO, Model model){
-        boardService.update(boardDTO);//service가 수행
-        BoardDTO dto = boardService.findById(boardDTO.getUuid());//수행한걸 가져옴
-        model.addAttribute("board",dto);
-        return "detail"; //detail화면이 보여줌
-    }
-
-    //delete
     @GetMapping("/delete")
-    public String delete(@RequestParam("uuid") String uuid){
-        boardService.delete(uuid);
+    public String delete(@RequestParam("id") Long id) {
+        boardService.delete(id);
         return "redirect:/board/";
+    }
+
+    @GetMapping("/update")
+    public String updateForm(@RequestParam("id") Long id,
+                             Model model) {
+        BoardDTO boardDTO = boardService.findById(id);
+        model.addAttribute("board", boardDTO);
+        return "update";
+    }
+
+    @PostMapping("/update")
+    public String update(@ModelAttribute BoardDTO boardDTO, Model model) {
+        boardService.update(boardDTO);
+        BoardDTO dto = boardService.findById(boardDTO.getId());
+        model.addAttribute("board", dto);
+        return "detail";
+    }
+
+    @GetMapping("/paging")
+    public String paging(Model model,
+                         @RequestParam(value = "page", required = false, defaultValue = "1") int page) {
+        List<BoardDTO> boardList = boardService.pagingList(page);
+        PageDTO pageDTO = boardService.pagingParam(page);
+        model.addAttribute("boardList", boardList);
+        model.addAttribute("paging", pageDTO);
+        return "paging";
     }
 }
